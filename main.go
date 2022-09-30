@@ -36,9 +36,16 @@ func (g *Goinit) Run() error {
 		func() error { return g.writeTemplate("main.go") },
 		func() error { return g.cmd("go", "mod", "init") },
 		func() error { return g.cmd("go", "get", "github.com/stretchr/testify") },
-		func() error { return g.cmd("git", "init") },
-		func() error { return g.cmd("git", "add", ".") },
-		func() error { return g.cmd("git", "commit", "-m", "goinit") },
+	}
+
+	if inRepo, err := g.insideRepo(); err != nil {
+		return err
+	} else if !inRepo {
+		steps = append(steps,
+			func() error { return g.cmd("git", "init") },
+			func() error { return g.cmd("git", "add", ".") },
+			func() error { return g.cmd("git", "commit", "-m", "goinit") },
+		)
 	}
 
 	for _, step := range steps {
@@ -48,6 +55,16 @@ func (g *Goinit) Run() error {
 	}
 
 	return nil
+}
+
+func (g *Goinit) insideRepo() (bool, error) {
+	if info, err := os.Stat(filepath.Join(filepath.Dir(g.dir), ".git")); err == nil {
+		return info.IsDir(), nil
+	} else if os.IsNotExist(err) {
+		return false, nil
+	} else {
+		return false, err
+	}
 }
 
 func (g *Goinit) writeTemplate(name string) error {

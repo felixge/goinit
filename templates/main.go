@@ -7,13 +7,17 @@ import (
 )
 
 func main() {
-	if err := run(); err != nil {
+	cmd := Cmd{}
+	flag.Parse()
+	if err := cmd.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
-	flag.Parse()
+type Cmd struct {
+}
+
+func (c *Cmd) Run() error {
 	return nil
 }
